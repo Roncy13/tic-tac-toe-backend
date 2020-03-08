@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
+import { GameExistMiddleware } from './tic-tac-toe/policies/game-exist';
 import { TicTacToeModule } from './tic-tac-toe/tic-tac-toe.module';
 
 @Module({
@@ -9,4 +10,10 @@ import { TicTacToeModule } from './tic-tac-toe/tic-tac-toe.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(GameExistMiddleware)
+      .forRoutes({ path: 'tic-tac-toe/player-two', method: RequestMethod.PUT });
+  }
+}

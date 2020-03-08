@@ -7,6 +7,7 @@ import { TicTacToeSchema } from './tic-tac-toe-schema';
 @Module({
   imports: [MongooseModule.forFeature([{ name: 'TicTacToe', schema: TicTacToeSchema }])],
   controllers: [TicTacToeController],
-  providers: [TicTacToeService]
+  providers: [TicTacToeService],
+  exports: [TicTacToeService]
 })
 export class TicTacToeModule {}

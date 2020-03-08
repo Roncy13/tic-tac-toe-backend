@@ -4,5 +4,6 @@ export interface TicTacToe {
     playerOne?: String,
     playerTwo?: String
   },
-  plays: [{ playerOne: Number, playerTwo: Number }]
+  plays: [{ playerOne: Number, playerTwo: Number }],
+  winner: String
 }

@@ -2,6 +2,7 @@ import { Controller, Post, Res, Body, HttpCode, HttpStatus, Put } from '@nestjs/
 import { Response } from 'express';
 import { PlayerOneDTO, PlayerTwoDTO } from './dto/players.dto';
 import { TicTacToeService } from './tic-tac-toe.service';
+import { TicTacToe } from './tic-tac-toe.interface';
 
 @Controller('tic-tac-toe')
 export class TicTacToeController {
@@ -13,7 +14,7 @@ export class TicTacToeController {
     @Body() body: PlayerOneDTO,
     @Res() response: Response): Promise<Response> {
 
-    const playerOne = await this.service.create(body),
+    const playerOne: TicTacToe = await this.service.create(body),
       result = {
         data: playerOne,
         message: `Player One Created Successfully`
@@ -28,6 +29,11 @@ export class TicTacToeController {
     @Res() response: Response
   ): Promise<Response> {
 
-    return response.status(HttpStatus.OK).json(body);
+    const game: TicTacToe = await this.service.joinPlayerTwo(body);
+    const result = {
+      data: game,
+      message: `${ game.players.playerTwo } can now join the game...!`
+    };
+    return response.status(HttpStatus.OK).json(result);
   }
 }

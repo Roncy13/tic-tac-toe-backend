@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { PlayerOneDTO } from './dto/players.dto';
+import { PlayerOneDTO, PlayerTwoDTO } from './dto/players.dto';
 import * as uniqid from 'uniqid';
 import { TicTacToe } from './tic-tac-toe.interface';
 
@@ -18,9 +18,18 @@ export class TicTacToeService {
       players: {
         playerOne
       },
-      connection
+      connection,
+      winner: null
     }, result = new this.model(newGame);
 
     return result.save();
+  }
+
+  async findExisting(connection: string): Promise<TicTacToe> {
+    return this.model.findOne({ connection }).exec();
+  }
+
+  async joinPlayerTwo({ playerTwo, connection }: PlayerTwoDTO): Promise<TicTacToe> {
+    return this.model.findOneAndUpdate({ connection }, {"$set": { "players.playerTwo": playerTwo } }).exec();
   }
 }
