@@ -4,5 +4,5 @@ export class PlayerOneDTO {
 
 export class PlayerTwoDTO {
   playerTwo: string;
-  connectiong: string;
+  connection: string;
 }
