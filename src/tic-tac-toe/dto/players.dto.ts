@@ -1,11 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmpty } from 'class-validator';
 
 export class PlayerOneDTO {
   @IsNotEmpty()
   @IsString()
   playerOne: string;
-
-  @IsString()
   connection: string;
 }
 
