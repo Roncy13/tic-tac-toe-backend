@@ -4,11 +4,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { PlayerOneDTO, PlayerTwoDTO } from './dto/players.dto';
 import * as uniqid from 'uniqid';
 import { TicTacToe } from './tic-tac-toe.interface';
+import { TicTacToeGateway } from './tic-tac-toe.gateway';
 
 @Injectable()
 export class TicTacToeService {
 
-  constructor(@InjectModel('TicTacToe') private readonly model: Model<TicTacToe>) {}
+  constructor(
+    @InjectModel('TicTacToe') private readonly model: Model<TicTacToe>,
+    private gateWay: TicTacToeGateway
+  ) {}
 
   async create(body: PlayerOneDTO): Promise<TicTacToe> {
     body.connection = uniqid();
@@ -31,5 +35,9 @@ export class TicTacToeService {
 
   async joinPlayerTwo({ playerTwo, connection }: PlayerTwoDTO): Promise<TicTacToe> {
     return this.model.findOneAndUpdate({ connection }, {"$set": { "players.playerTwo": playerTwo } }).exec();
+  }
+
+  async move() {
+    this.gateWay.wss.emit("move", "hey");
   }
 }
