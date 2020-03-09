@@ -35,11 +35,9 @@ export class Players {
       score = 0,
       winner = "";
 
-    // process.push(this.checkLeftToRight(room));
+    process.push(this.checkLeftToRight(room));
     process.push(this.checkUpToBottom(room));
-    // process[2] = this.checkDiagonals(room);
-
-    console.log(process);
+    process.push(this.checkDiagonals(room));
 
     result = process.includes(true);
 
@@ -81,8 +79,6 @@ export class Players {
   }
 
   checkWinner(playerChips: String[], room: String, score: number): boolean {
-    console.log(playerChips);
-
     const players = uniq(playerChips);
 
     if (players.length == 1 && !players.includes(null)) {
@@ -128,6 +124,13 @@ export class Players {
   }
 
   checkDiagonals(room: string): Boolean {
+    const games = this.getGames(room),
+      sideA = Array(3).fill(0).map((row, index) => games[(index * 4) + 1]),
+      sideB = Array(3).fill(0).map((row, index) => games[(index * 2) + 3]) 
+    
+    console.log("Side A: ", sideA);
+    console.log("Side B: ", sideB);
+
     return false;
   }
 
