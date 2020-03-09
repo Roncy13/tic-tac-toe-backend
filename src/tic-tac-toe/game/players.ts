@@ -7,21 +7,6 @@ export class Players {
     this.games = {};
   }
 
-  placeChip(room: string, id: string) {
-
-  }
-
-  playerInRoom(room: string, id: string) {
-    let playerType: "",
-      result = false;
-
-    if (room in this.games) {
-      const playerType = this.fetchPlayerType(id, room);
-      
-      console.log(playerType);
-    }
-  }
-
   fetchPlayerType(id: string, room: string): String {
     const players = this.games[room].players,
         keys = Object.keys(players);
