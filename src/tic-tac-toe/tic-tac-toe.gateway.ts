@@ -63,8 +63,21 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
   }
 
   @SubscribeMessage('placeChip')
-  async placeChip(client: Socket, { room, placeChip }) {
-    console.log(client.id, room, placeChip);
+  async placeChip(client: Socket, { placeChip }) {
+    if (client.room != undefined) {
+      const applied = this.games.applyChip(client.room, placeChip, client.id),
+        games = this.games.getGames(client.room),
+        message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
+      
+      console.log(applied);
+
+      if (!applied) {
+        console.log("message", applied, client.id);
+        this.wss.to(client.id).emit("message", { message, type: "error" });
+      } else {
+        this.wss.in(client.room).emit("receivedChips", { games })
+      }
+    }
   }
 
   @SubscribeMessage('joinRoom')

@@ -84,4 +84,21 @@ export class Players {
   getGames(room) {
     return room in this.games ? this.games[room].tic_tac_toe : {};
   }
+
+  applyChip(room: string, placeChip: string, playerId: string): boolean {
+    const game = this.getGames(room);
+
+    if (!isEmpty(game)) {
+      const players = this.getClients(room),
+        keys = Object.keys(players),
+        playerType = keys.filter(value => players[value].playerId == playerId)[0] || null;
+
+      if (game[placeChip] == null) {
+        this.games[room].tic_tac_toe[placeChip] = playerType;
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
