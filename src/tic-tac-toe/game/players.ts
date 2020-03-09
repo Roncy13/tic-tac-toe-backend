@@ -8,7 +8,7 @@ export class Players {
     this.checkSize = this.checkSize.bind(this);
   }
 
-  checkSize(room: string, playerId: string, playerType) {
+  checkSize(room: string, playerId: string, playerName = "", playerType) {
     
     const players = room in this.games ? this.games[room] : {},
       size = Object.keys(players).length;
@@ -26,12 +26,14 @@ export class Players {
             [element]: null
           };
         });
-        
       }
 
       this.games[room].players = {
         ...this.games[room].players,
-        [playerType]: playerId
+        [playerType]: {
+          playerId,
+          playerName
+        }
       };
 
       return true;
