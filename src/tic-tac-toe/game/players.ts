@@ -249,4 +249,8 @@ export class Players {
 
     return Object.keys(players).length === 2;
   }
+
+  removeRoom(room: string): void {
+    delete this.games[room];
+  }
 }

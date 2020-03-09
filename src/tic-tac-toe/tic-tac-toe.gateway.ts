@@ -104,10 +104,11 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
           if (result) {
             this.wss.in(room).emit("winner", { winner, score, games });
+            this.games.removeRoom(room);
+          } else {
+            this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
+            client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
           }
-
-          this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
-          client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
         }
       }
     } catch(err) {
