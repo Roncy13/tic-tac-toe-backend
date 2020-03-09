@@ -90,7 +90,7 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
         this.wss.in(room).emit("receivedChips", { games });
 
         if (result) {
-          this.wss.in(room).emit("winner", { winner, score });
+          this.wss.in(room).emit("winner", { winner, score, games });
         }
       }
     }

@@ -86,8 +86,10 @@ export class Players {
       const winnerName = this.getClients(room)[`${key}`].playerName;
       this.games[`${room}`].winner = cloneDeep(winnerName);
       this.games[`${room}`].score = cloneDeep(score);
+
+      return true;
     }
-    
+
     return false;
   }
 
@@ -125,13 +127,20 @@ export class Players {
 
   checkDiagonals(room: string): Boolean {
     const games = this.getGames(room),
-      sideA = Array(3).fill(0).map((row, index) => games[(index * 4) + 1]),
-      sideB = Array(3).fill(0).map((row, index) => games[(index * 2) + 3]) 
-    
-    console.log("Side A: ", sideA);
-    console.log("Side B: ", sideB);
+      sideAKeys = Array(3).fill(0).map((row, index) => (index * 4) + 1),
+      sideBKeys = Array(3).fill(0).map((row, index) => (index * 2) + 3),
+      scoreA = sideAKeys.reduce((acc, val) => acc + val || 0, 0),
+      scoreB = sideBKeys.reduce((acc, val) => acc + val || 0, 0),
+      chipsA = sideAKeys.map(row => games[row]),
+      chipsB = sideBKeys.map(row => games[row]);
 
-    return false;
+    if (this.checkWinner(chipsA, room, scoreA)) {
+      return true;
+    } else if (this.checkWinner(chipsB, room, scoreB)) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   checkSize(room: string, playerId: string, playerName = "", playerType): Boolean {
