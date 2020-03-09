@@ -1,4 +1,4 @@
-import { range, isEmpty } from 'lodash';
+import { range, isEmpty, uniq, cloneDeep } from 'lodash';
 
 export class Players {
   games;
@@ -29,7 +29,109 @@ export class Players {
     }
   }
 
-  checkSize(room: string, playerId: string, playerName = "", playerType): Voolean {
+  gameLogic(room: string): { result: Boolean, score: number, winner: string } {
+    let process = [],
+      result = false,
+      score = 0,
+      winner = "";
+
+    // process.push(this.checkLeftToRight(room));
+    process.push(this.checkUpToBottom(room));
+    // process[2] = this.checkDiagonals(room);
+
+    console.log(process);
+
+    result = process.includes(true);
+
+    if (result) {
+      const { winner: inGameWinner, score: inGameScore } = this.games[room];
+
+      score = inGameScore;
+      winner = inGameWinner
+    }
+
+    return { result, score, winner };
+  }
+
+  checkLeftToRight(room: string): Boolean {
+    const games = this.getGames(room),
+      length = Object.keys(games).length;
+
+    let score = 0,
+      result = [];
+
+    // loops by three
+    for (let i = 1; i <= length; i ++) {
+      result.push(games[i]);
+
+      score += i;
+      
+      // when three, then check results
+      if (i % 3 === 0) {
+        if (this.checkWinner(result, room, score)) {
+          return true;
+        }
+
+        result = [];
+        score = 0;
+      }
+    }
+    
+    return this.games[room].score > 0;
+  }
+
+  checkWinner(playerChips: String[], room: String, score: number): boolean {
+    console.log(playerChips);
+
+    const players = uniq(playerChips);
+
+    if (players.length == 1 && !players.includes(null)) {
+      const key = players[0];
+      const winnerName = this.getClients(room)[`${key}`].playerName;
+      this.games[`${room}`].winner = cloneDeep(winnerName);
+      this.games[`${room}`].score = cloneDeep(score);
+    }
+    
+    return false;
+  }
+
+  checkUpToBottom(room: string): Boolean {
+    const games = this.getGames(room),
+      length = Object.keys(games).length;
+
+    let score = 0,
+      result = [];
+    
+    // deternmines the base
+    for (let firstRow = 1; firstRow <= length / 3; firstRow++) {
+      
+      // loop downwards
+      
+      const secondRow = firstRow + 3,
+        thirdRow = firstRow + 6;
+      
+      result.push(games[firstRow]);
+      result.push(games[secondRow]);
+      result.push(games[thirdRow]);
+
+      score = firstRow + secondRow + thirdRow;
+
+      if (this.checkWinner(result, room, score)) {
+        return true;
+      }
+
+      result = [];
+      score = 0;
+    }
+
+    return this.games[room].score > 0;
+  }
+
+  checkDiagonals(room: string): Boolean {
+    return false;
+  }
+
+  checkSize(room: string, playerId: string, playerName = "", playerType): Boolean {
     const game = room in this.games ? this.games[room] : {},
       size = Object.keys(game.players || {}).length;
 
@@ -38,7 +140,9 @@ export class Players {
         this.games[room] = {
           tic_tac_toe: {},
           players: {},
-          creator: ""
+          creator: "",
+          winner: "",
+          score: 0
         };
         
         range(1, 10).forEach(element => {
@@ -91,12 +195,12 @@ export class Players {
         keys = Object.keys(players),
         playerType = keys.filter(value => players[value].playerId == playerId)[0] || null;
 
+
       if (game[placeChip] == null) {
         this.games[room].tic_tac_toe[placeChip] = playerType;
         return true;
       }
     }
-
     return false;
   }
 }

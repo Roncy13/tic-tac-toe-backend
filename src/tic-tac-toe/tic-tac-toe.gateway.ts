@@ -75,15 +75,23 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('placeChip')
   async placeChip(client: Socket, { placeChip }) {
-    if (client.room != undefined) {
-      const applied = this.games.applyChip(client.room, placeChip, client.id),
-        games = this.games.getGames(client.room),
+    const { id, room } = client;
+
+    if (room != undefined) {
+      const applied = this.games.applyChip(room, placeChip, id),
+        games = this.games.getGames(room),
         message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
     
       if (!applied) {
-        this.wss.to(client.id).emit("message", { message, type: "error" });
+        this.wss.to(id).emit("message", { message, type: "error" });
       } else {
-        this.wss.in(client.room).emit("receivedChips", { games })
+        const { result, score, winner } = this.games.gameLogic(room);
+
+        this.wss.in(room).emit("receivedChips", { games });
+
+        if (result) {
+          this.wss.in(room).emit("winner", { winner, score });
+        }
       }
     }
   }
@@ -91,12 +99,12 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
   @SubscribeMessage('joinRoom')
   async joinRoom(client: Socket, { room, name }) {
     const checkRoom = this.games.checkRoom(room);
-
+    
     if (!checkRoom) {
       this.roomDoesNotExist(client);
     } else {
-      const playerType = (this.games.getRoomCreator(name) == name) ? PlayerType.PlayerOne : PlayerType.PlayerTwo
-      const bool = this.games.checkSize(room, client.id, name, playerType);
+      const playerType = (this.games.getRoomCreator(room) == name) ? PlayerType.PlayerOne : PlayerType.PlayerTwo,
+        bool = this.games.checkSize(room, client.id, name, playerType);
 
       if (bool) {
         this.receivedRoom(client, room);
