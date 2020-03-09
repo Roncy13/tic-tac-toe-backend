@@ -64,8 +64,9 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     const gameClients = this.games.getClients(room);
     const gamePlace = this.games.getGames(room);
     const creator = this.games.getRoomCreator(room);
+    const turn = (this.games.playersMustBeTwo(room)) ? this.games.whosTurn(room) : null;
 
-    this.wss.in(room).emit("receivedRoom", { players: gameClients, game: gamePlace, creator });
+    this.wss.in(room).emit("receivedRoom", { players: gameClients, game: gamePlace, creator, turn });
   }
 
   @SubscribeMessage('placeChip')
@@ -97,9 +98,9 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
         if (!applied) {
           this.wss.to(id).emit("message", { message, type: "error" });
         } else {
-          const { result, score, winner } = this.games.gameLogic(room);
+          const { result, score, winner, turn } = this.games.gameLogic(room);
 
-          this.wss.in(room).emit("receivedChips", { games });
+          this.wss.in(room).emit("receivedChips", { games, turn });
 
           if (result) {
             this.wss.in(room).emit("winner", { winner, score, games });

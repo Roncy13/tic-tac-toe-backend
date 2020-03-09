@@ -31,11 +31,12 @@ export class Players {
     }
   }
 
-  gameLogic(room: string): { result: Boolean, score: number, winner: string } {
+  gameLogic(room: string): { result: Boolean, score: number, winner: string, turn: string } {
     let process = [],
       result = false,
       score = 0,
-      winner = "";
+      winner = "",
+      { turn } = this.games[room];
 
     process.push(this.checkLeftToRight(room));
     process.push(this.checkUpToBottom(room));
@@ -50,7 +51,7 @@ export class Players {
       winner = inGameWinner
     }
 
-    return { result, score, winner };
+    return { result, score, winner, turn };
   }
 
   checkLeftToRight(room: string): Boolean {
@@ -237,6 +238,10 @@ export class Players {
     const result = keys.filter(row => players[row].playerId == playerId)[0];
 
     return result == this.games[room].turn;
+  }
+
+  whosTurn(room: string) : String {
+    return this.games[room].turn;
   }
 
   playersMustBeTwo(room: string): Boolean {
