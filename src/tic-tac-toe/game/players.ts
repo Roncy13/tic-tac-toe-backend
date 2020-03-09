@@ -22,7 +22,7 @@ export class Players {
     }
   }
 
-  fetchPlayerType(id: string, room: string) {
+  fetchPlayerType(id: string, room: string): String {
     const players = this.games[room].players,
         keys = Object.keys(players);
 
@@ -32,7 +32,7 @@ export class Players {
   }
 
 
-  removePlayer(id: string, room: string) {
+  removePlayer(id: string, room: string): Object {
     if (room in this.games) {
       const playerType = this.fetchPlayerType(id, room);
       
@@ -44,7 +44,7 @@ export class Players {
     }
   }
 
-  checkSize(room: string, playerId: string, playerName = "", playerType): boolean {
+  checkSize(room: string, playerId: string, playerName = "", playerType): Voolean {
     const game = room in this.games ? this.games[room] : {},
       size = Object.keys(game.players || {}).length;
 
@@ -78,23 +78,23 @@ export class Players {
     }
   }
 
-  setCreator(room: string, name: string) {
+  setCreator(room: string, name: string): void {
     this.games[room].creator = name;
   }
 
-  getClients(room) {
+  getClients(room): Object {
     return room in this.games ? this.games[room].players : {};
   }
 
-  checkRoom(room: string) {
+  checkRoom(room: string): Boolean {
     return room in this.games;
   }
 
-  getRoomCreator(room) {
+  getRoomCreator(room): string {
     return this.checkRoom(room) ? this.games[room].creator : "";
   }
 
-  getGames(room) {
+  getGames(room): Object {
     return room in this.games ? this.games[room].tic_tac_toe : {};
   }
 
