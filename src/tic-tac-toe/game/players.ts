@@ -1,4 +1,6 @@
 import { range, isEmpty, uniq, cloneDeep } from 'lodash';
+import { PlayerType } from '../../utilities/define';
+
 
 export class Players {
   games;
@@ -154,7 +156,8 @@ export class Players {
           players: {},
           creator: "",
           winner: "",
-          score: 0
+          score: 0,
+          turn: playerType
         };
         
         range(1, 10).forEach(element => {
@@ -210,9 +213,20 @@ export class Players {
 
       if (game[placeChip] == null) {
         this.games[room].tic_tac_toe[placeChip] = playerType;
+        this.turnNextPlayer(room);
         return true;
       }
     }
     return false;
+  }
+
+  turnNextPlayer(room): void {
+    const currentPlayer = this.games[room].turn;
+
+    if (currentPlayer == PlayerType.PlayerOne) {
+      this.games[room].turn = PlayerType.PlayerTwo
+    } else {
+      this.games[room].turn = PlayerType.PlayerOne
+    }
   }
 }

@@ -2,12 +2,7 @@ import { SubscribeMessage, WebSocketGateway, OnGatewayDisconnect, OnGatewayConne
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { Players } from './game/players';
-import { isEmpty } from 'lodash';
-
-enum PlayerType {
-  PlayerOne = "PlayerOne",
-  PlayerTwo = "PlayerTwo" 
-}
+import { PlayerType } from '../utilities/define';
 
 enum MessageType {
   Sucess= "success",
@@ -75,24 +70,31 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('placeChip')
   async placeChip(client: Socket, { placeChip }) {
-    const { id, room } = client;
+    try {
+      const { id, room } = client;
 
-    if (room != undefined) {
-      const applied = this.games.applyChip(room, placeChip, id),
-        games = this.games.getGames(room),
-        message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
-    
-      if (!applied) {
-        this.wss.to(id).emit("message", { message, type: "error" });
-      } else {
-        const { result, score, winner } = this.games.gameLogic(room);
+      if (room != undefined) {
+        const applied = this.games.applyChip(room, placeChip, id),
+          games = this.games.getGames(room),
+          message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
+      
+        if (!applied) {
+          this.wss.to(id).emit("message", { message, type: "error" });
+        } else {
+          const { result, score, winner } = this.games.gameLogic(room);
 
-        this.wss.in(room).emit("receivedChips", { games });
+          this.wss.in(room).emit("receivedChips", { games });
 
-        if (result) {
-          this.wss.in(room).emit("winner", { winner, score, games });
+          if (result) {
+            this.wss.in(room).emit("winner", { winner, score, games });
+          }
+
+          this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn" });
+          client.to(room).emit("message", { message: "Its Your Turn To Place Chip" });
         }
       }
+    } catch(err) {
+      console.log(err);
     }
   }
 
