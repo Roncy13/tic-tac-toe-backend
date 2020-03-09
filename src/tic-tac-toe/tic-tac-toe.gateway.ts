@@ -1,8 +1,10 @@
 import { SubscribeMessage, WebSocketGateway, OnGatewayDisconnect, OnGatewayConnection, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { Players } from './game/players';
 import { PlayerType } from '../utilities/define';
+import { InjectModel } from '@nestjs/mongoose';
+import { TicTacToe } from './tic-tac-toe.interface';
+import { Model } from 'mongoose';
 
 enum MessageType {
   Sucess= "success",
@@ -14,6 +16,8 @@ enum MessageType {
 @WebSocketGateway(4001, { namespace: '/game' })
 export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() wss: Server;
+
+  constructor(@InjectModel('TicTacToe') private readonly model: Model<TicTacToe>) {}
 
   private games = new Players();
 
@@ -104,7 +108,19 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
           if (result) {
             this.wss.in(room).emit("winner", { winner, score, games });
-            this.games.removeRoom(room);
+
+            const { tic_tac_toe: game, players } = this.games.fetchAllInGame(room);
+            const newGame = {
+              room,
+              players,
+              game,
+              winner,
+              score
+            },
+            result = new this.model(newGame);
+
+            await result.save();
+            await this.games.removeRoom(room);
           } else {
             this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
             client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });

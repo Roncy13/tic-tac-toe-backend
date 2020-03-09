@@ -146,6 +146,10 @@ export class Players {
     }
   }
 
+  fetchAllInGame(room) {
+    return this.games[room]
+  }
+
   checkSize(room: string, playerId: string, playerName = "", playerType): Boolean {
     const game = room in this.games ? this.games[room] : {},
       size = Object.keys(game.players || {}).length;
@@ -251,6 +255,7 @@ export class Players {
   }
 
   removeRoom(room: string): void {
+
     delete this.games[room];
   }
 }

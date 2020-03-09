@@ -1,14 +1,29 @@
 import * as mongoose from 'mongoose';
 
-const playSchema = new mongoose.Schema({ playerOne: Number, playerTwo: Number });
+const playSchema = new mongoose.Schema({ 
+  1: String,
+  2: String,
+  3: String,
+  4: String,
+  5: String,
+  6: String,
+  7: String,
+  8: String,
+  9: String,
+});
+
+const PlayInfoSchema = new mongoose.Schema({
+  playerId: String,
+  playerName: String,
+});
 
 export const TicTacToeSchema = new mongoose.Schema({
-  connection: String,
+  room: String,
   players: {
-    playerOne: String,
-    playerTwo: String
+    playerOne: PlayInfoSchema,
+    playerTwo: PlayInfoSchema
   },
-  plays: [playSchema],
+  game: playSchema,
   winner: String,
   score: Number
 });
