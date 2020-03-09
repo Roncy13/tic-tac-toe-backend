@@ -229,4 +229,19 @@ export class Players {
       this.games[room].turn = PlayerType.PlayerOne
     }
   }
+
+  isItPlayersTurn(room: string, playerId: string) : Boolean {
+    const { players } = this.games[room],
+      keys = Object.keys(players);
+
+    const result = keys.filter(row => players[row].playerId == playerId)[0];
+
+    return result == this.games[room].turn;
+  }
+
+  playersMustBeTwo(room: string): Boolean {
+    const { players } = this.games[room];
+
+    return Object.keys(players).length === 2;
+  }
 }

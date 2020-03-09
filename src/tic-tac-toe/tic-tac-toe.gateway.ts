@@ -7,14 +7,14 @@ import { PlayerType } from '../utilities/define';
 enum MessageType {
   Sucess= "success",
   Error= "error",
-  Warning= "warning"
+  Warning = "warning",
+  Info = "info"
 }
 
 @WebSocketGateway(4001, { namespace: '/game' })
 export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() wss: Server;
 
-  private logger: Logger = new Logger('ChatGateway');
   private games = new Players();
 
   afterInit(server: any): void {
@@ -71,8 +71,24 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
   @SubscribeMessage('placeChip')
   async placeChip(client: Socket, { placeChip }) {
     try {
-      const { id, room } = client;
+      const { id, room } = client,
+        playable = this.games.playersMustBeTwo(room);
 
+      // Check if two players are present
+
+      if (!playable) {
+        this.wss.to(client.id).emit("message", { message: "Wait For your opponent to Join in the Game...!", type: MessageType.Error });
+        return;
+      }
+
+      const checkTurns = this.games.isItPlayersTurn(room, id);
+      // Checks if your turn
+      if (!checkTurns) {
+        this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn, Please wait for him to finish his turn...!", type: MessageType.Error });
+        return;
+      }
+
+      // Applying Game Logic and Placing of Chips
       if (room != undefined) {
         const applied = this.games.applyChip(room, placeChip, id),
           games = this.games.getGames(room),
@@ -89,8 +105,8 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
             this.wss.in(room).emit("winner", { winner, score, games });
           }
 
-          this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn" });
-          client.to(room).emit("message", { message: "Its Your Turn To Place Chip" });
+          this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
+          client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
         }
       }
     } catch(err) {
