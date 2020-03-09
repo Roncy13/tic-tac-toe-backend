@@ -66,7 +66,7 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     const creator = this.games.getRoomCreator(room);
     const turn = (this.games.playersMustBeTwo(room)) ? this.games.whosTurn(room) : null;
 
-    this.wss.in(room).emit("receivedRoom", { players: gameClients, game: gamePlace, creator, turn });
+    this.wss.in(room).emit("receivedRoom", { room, players: gameClients, game: gamePlace, creator, turn });
   }
 
   @SubscribeMessage('placeChip')
