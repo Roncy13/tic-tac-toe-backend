@@ -1,17 +1,52 @@
-import { range } from 'lodash';
+import { range, isEmpty } from 'lodash';
 
 export class Players {
   games;
 
   constructor() {
     this.games = {};
-    this.checkSize = this.checkSize.bind(this);
   }
 
-  checkSize(room: string, playerId: string, playerName = "", playerType) {
-    
-    const players = room in this.games ? this.games[room] : {},
-      size = Object.keys(players).length;
+  placeChip(room: string, id: string) {
+
+  }
+
+  playerInRoom(room: string, id: string) {
+    let playerType: "",
+      result = false;
+
+    if (room in this.games) {
+      const playerType = this.fetchPlayerType(id, room);
+      
+      console.log(playerType);
+    }
+  }
+
+  fetchPlayerType(id: string, room: string) {
+    const players = this.games[room].players,
+        keys = Object.keys(players);
+
+    const player = keys.filter(value => players[value].playerId == id);
+
+    return player[0] || "";
+  }
+
+
+  removePlayer(id: string, room: string) {
+    if (room in this.games) {
+      const playerType = this.fetchPlayerType(id, room);
+      
+      if (!isEmpty(playerType)) {
+        delete this.games[room].players[`${playerType}`];
+
+        return this.games[room].players;
+      }
+    }
+  }
+
+  checkSize(room: string, playerId: string, playerName = "", playerType): boolean {
+    const game = room in this.games ? this.games[room] : {},
+      size = Object.keys(game.players || {}).length;
 
     if (size < 2) {
       if (size == 0) {
@@ -43,10 +78,10 @@ export class Players {
   }
 
   getClients(room) {
-    return room in this.games ? this.games[room].tic_tac_toe : {};
+    return room in this.games ? this.games[room].players : {};
   }
 
   getGames(room) {
-    return room in this.games ? this.games[room].players : {};
+    return room in this.games ? this.games[room].tic_tac_toe : {};
   }
 }

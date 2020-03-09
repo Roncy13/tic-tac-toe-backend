@@ -2,10 +2,11 @@ import { SubscribeMessage, WebSocketGateway, OnGatewayDisconnect, OnGatewayConne
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { Players } from './game/players';
+import { isEmpty } from 'lodash';
 
 enum PlayerType {
   PlayerOne = "PlayerOne",
-  PlayerTwo = "PlayerTWO" 
+  PlayerTwo = "PlayerTwo" 
 }
 
 @WebSocketGateway(4001, { namespace: '/game' })
@@ -19,8 +20,20 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     console.log("initialized");
   }
 
-  handleDisconnect(client: Socket): void {
-    console.log(client.id, client.room);
+  async handleDisconnect(client: Socket) {
+    this.emitDisconnection(client);
+  }
+
+  emitDisconnection(client: Socket) {
+    const { id, room } = client;
+
+    if (room != undefined) {
+      const players = this.games.removePlayer(id, room) || {};
+
+      console.log(this.wss.emit);
+
+      this.wss.emit("players", { room, players });
+    }
   }
 
   handleConnection(client: Socket): void {
@@ -29,7 +42,7 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage("removePlayer")
   async removePlayer(client: Socket) {
-    console.log("Disconnect", client.id)
+    this.emitDisconnection(client);
   }
 
   @SubscribeMessage('createdRoom')
