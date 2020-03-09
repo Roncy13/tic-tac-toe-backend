@@ -9,6 +9,12 @@ enum PlayerType {
   PlayerTwo = "PlayerTwo" 
 }
 
+enum MessageType {
+  Sucess= "success",
+  Error= "error",
+  Warning= "warning"
+}
+
 @WebSocketGateway(4001, { namespace: '/game' })
 export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() wss: Server;
@@ -29,9 +35,6 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
     if (room != undefined) {
       const players = this.games.removePlayer(id, room) || {};
-
-      console.log(this.wss.emit);
-
       this.wss.emit("players", { room, players });
     }
   }
@@ -47,9 +50,16 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('createdRoom')
   async createdRoom(client: Socket, { room, name }) { 
-    this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
 
-    this.receivedRoom(client, room);
+    const checkRoom = this.games.checkRoom(room);
+    if (!checkRoom) {
+      this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
+      this.games.setCreator(room, name);
+
+      this.receivedRoom(client, room);
+    } else {
+      this.wss.to(client.id).emit("message", { message: "Room Already Created, Please Click Join Room", type: MessageType.Error });
+    }
   }
 
   async receivedRoom(client, room: string) {
@@ -58,8 +68,9 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     client.room = room;
     const gameClients = this.games.getClients(room);
     const gamePlace = this.games.getGames(room);
+    const creator = this.games.getRoomCreator(room);
 
-    this.wss.in(room).emit("receivedRoom", { players: gameClients, game: gamePlace });
+    this.wss.in(room).emit("receivedRoom", { players: gameClients, game: gamePlace, creator });
   }
 
   @SubscribeMessage('placeChip')
@@ -68,11 +79,8 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
       const applied = this.games.applyChip(client.room, placeChip, client.id),
         games = this.games.getGames(client.room),
         message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
-      
-      console.log(applied);
-
+    
       if (!applied) {
-        console.log("message", applied, client.id);
         this.wss.to(client.id).emit("message", { message, type: "error" });
       } else {
         this.wss.in(client.room).emit("receivedChips", { games })
@@ -82,10 +90,23 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('joinRoom')
   async joinRoom(client: Socket, { room, name }) {
-    const bool = this.games.checkSize(room, client.id, name, PlayerType.PlayerTwo);
+    const checkRoom = this.games.checkRoom(room);
 
-    if (bool) {
-      this.receivedRoom(client, room);
-    }  
+    if (!checkRoom) {
+      this.roomDoesNotExist(client);
+    } else {
+      const playerType = (this.games.getRoomCreator(name) == name) ? PlayerType.PlayerOne : PlayerType.PlayerTwo
+      const bool = this.games.checkSize(room, client.id, name, playerType);
+
+      if (bool) {
+        this.receivedRoom(client, room);
+      } else {
+        this.roomDoesNotExist(client);
+      }
+    }
+  }
+
+  roomDoesNotExist(client): void {
+    this.wss.to(client.id).emit("message", { message: "Room Does not Exist", type: MessageType.Error });
   }
 }

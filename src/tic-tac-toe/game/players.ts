@@ -52,7 +52,8 @@ export class Players {
       if (size == 0) {
         this.games[room] = {
           tic_tac_toe: {},
-          players: {}
+          players: {},
+          creator: ""
         };
         
         range(1, 10).forEach(element => {
@@ -77,8 +78,20 @@ export class Players {
     }
   }
 
+  setCreator(room: string, name: string) {
+    this.games[room].creator = name;
+  }
+
   getClients(room) {
     return room in this.games ? this.games[room].players : {};
+  }
+
+  checkRoom(room: string) {
+    return room in this.games;
+  }
+
+  getRoomCreator(room) {
+    return this.checkRoom(room) ? this.games[room].creator : "";
   }
 
   getGames(room) {
