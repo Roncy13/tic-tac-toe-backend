@@ -101,7 +101,9 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
       if (!applied) {
         this.wss.to(id).emit("message", { message, type: "error" });
       } else {
-        const { result, score, winner, turn } = this.games.gameLogic(room);
+        const { result, score, winner, turn, draw } = this.games.gameLogic(room);
+
+        console.log(draw);
 
         this.wss.in(room).emit("receivedChips", { games, turn });
 
@@ -120,9 +122,12 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
           await result.save();
           await this.games.removeRoom(room);
-        } else {
+        } else if (!draw){
           this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
           client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
+        } else if (draw) {
+          await this.games.removeRoom(room);
+          this.wss.in(room).emit("draw", { draw });
         }
       }
     }

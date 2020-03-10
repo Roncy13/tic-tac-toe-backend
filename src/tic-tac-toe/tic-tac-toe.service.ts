@@ -15,6 +15,6 @@ export class TicTacToeService {
   ) {}
 
   async fetchAll() {
-    return this.model.find({ score: { $gt: 0 } });
+    return this.model.find({ score: { $gt: 0 } }).sort([['score', -1]]);
   }
 }

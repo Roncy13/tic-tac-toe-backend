@@ -1,4 +1,4 @@
-import { range, isEmpty, uniq, cloneDeep } from 'lodash';
+import { range, isEmpty, uniq, cloneDeep, values } from 'lodash';
 import { PlayerType } from '../../utilities/define';
 
 
@@ -31,7 +31,7 @@ export class Players {
     }
   }
 
-  gameLogic(room: string): { result: Boolean, score: number, winner: string, turn: string } {
+  gameLogic(room: string): { result: Boolean, score: number, winner: string, turn: string, draw: Boolean } {
     let process = [],
       result = false,
       score = 0,
@@ -51,7 +51,10 @@ export class Players {
       winner = inGameWinner
     }
 
-    return { result, score, winner, turn };
+    const pieces = values(this.games[room].tic_tac_toe) || [];
+    const draw = !pieces.includes(null)
+
+    return { result, score, winner, turn, draw };
   }
 
   checkLeftToRight(room: string): Boolean {
