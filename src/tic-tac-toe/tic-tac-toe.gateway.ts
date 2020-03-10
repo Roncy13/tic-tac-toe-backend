@@ -49,25 +49,20 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('createdRoom')
   async createdRoom(client: Socket, { room, name }) { 
-    try {
-      const checkRoom = this.games.checkRoom(room);
-      if (!checkRoom) {
-        this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
-        this.games.setCreator(room, name);
-        console.log("creator", this.games.getRooms());
-        this.receivedRoom(client, room);
-      } else {
-        this.wss.to(client.id).emit("message", { message: "Room Already Created, Please Click Join Room", type: MessageType.Error });
-      }
-    } catch(err) {
-      console.log(err)
+    const checkRoom = this.games.checkRoom(room);
+
+    if (!checkRoom) {
+      this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
+      this.games.setCreator(room, name);
+      this.receivedRoom(client, room);
+    } else {
+      this.wss.to(client.id).emit("message", { message: "Room Already Created, Please Click Join Room", type: MessageType.Error });
     }
-    
   }
 
   async receivedRoom(client, room: string) {
     await client.join(room);
-    console.log("join", this.games.getRooms());
+    
     client.room = room;
     const gameClients = this.games.getClients(room);
     console.log("joined", this.games.getRooms());
@@ -80,60 +75,57 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('placeChip')
   async placeChip(client: Socket, { placeChip }) {
-    try {
-      const { id, room } = client,
-        playable = this.games.playersMustBeTwo(room);
 
-      // Check if two players are present
+    const { id, room } = client,
+    playable = this.games.playersMustBeTwo(room);
 
-      if (!playable) {
-        this.wss.to(client.id).emit("message", { message: "Wait For your opponent to Join in the Game...!", type: MessageType.Error });
-        return;
-      }
+    // Check if two players are present
 
-      const checkTurns = this.games.isItPlayersTurn(room, id);
-      // Checks if your turn
-      if (!checkTurns) {
-        this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn, Please wait for him to finish his turn...!", type: MessageType.Error });
-        return;
-      }
+    if (!playable) {
+      this.wss.to(client.id).emit("message", { message: "Wait For your opponent to Join in the Game...!", type: MessageType.Error });
+      return;
+    }
 
-      // Applying Game Logic and Placing of Chips
-      if (room != undefined) {
-        const applied = this.games.applyChip(room, placeChip, id),
-          games = this.games.getGames(room),
-          message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
-      
-        if (!applied) {
-          this.wss.to(id).emit("message", { message, type: "error" });
+    const checkTurns = this.games.isItPlayersTurn(room, id);
+    // Checks if your turn
+    if (!checkTurns) {
+      this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn, Please wait for him to finish his turn...!", type: MessageType.Error });
+      return;
+    }
+
+    // Applying Game Logic and Placing of Chips
+    if (room != undefined) {
+      const applied = this.games.applyChip(room, placeChip, id),
+        games = this.games.getGames(room),
+        message = applied ? "" : `You Cannot Place Already being filled by You or Other Player`;
+    
+      if (!applied) {
+        this.wss.to(id).emit("message", { message, type: "error" });
+      } else {
+        const { result, score, winner, turn } = this.games.gameLogic(room);
+
+        this.wss.in(room).emit("receivedChips", { games, turn });
+
+        if (result) {
+          this.wss.in(room).emit("winner", { winner, score, games });
+
+          const { tic_tac_toe: game, players } = this.games.fetchAllInGame(room);
+          const newGame = {
+            room,
+            players,
+            game,
+            winner,
+            score
+          },
+          result = new this.model(newGame);
+
+          await result.save();
+          await this.games.removeRoom(room);
         } else {
-          const { result, score, winner, turn } = this.games.gameLogic(room);
-
-          this.wss.in(room).emit("receivedChips", { games, turn });
-
-          if (result) {
-            this.wss.in(room).emit("winner", { winner, score, games });
-
-            const { tic_tac_toe: game, players } = this.games.fetchAllInGame(room);
-            const newGame = {
-              room,
-              players,
-              game,
-              winner,
-              score
-            },
-            result = new this.model(newGame);
-
-            await result.save();
-            await this.games.removeRoom(room);
-          } else {
-            this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
-            client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
-          }
+          this.wss.to(client.id).emit("message", { message: "It's Your Oponnents Turn", type: MessageType.Info });
+          client.to(room).emit("message", { message: "Its Your Turn To Place Chip", type: MessageType.Info });
         }
       }
-    } catch(err) {
-      console.log(err);
     }
   }
 
@@ -144,7 +136,6 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     if (!checkRoom) {
       this.roomDoesNotExist(client);
     } else {
-      console.log(this.games.getRooms());
 
       const playerType = (this.games.getRoomCreator(room) == name) ? PlayerType.PlayerOne : PlayerType.PlayerTwo,
         bool = this.games.checkSize(room, client.id, name, playerType);
