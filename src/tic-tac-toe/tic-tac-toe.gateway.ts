@@ -49,23 +49,28 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   @SubscribeMessage('createdRoom')
   async createdRoom(client: Socket, { room, name }) { 
-
-    const checkRoom = this.games.checkRoom(room);
-    if (!checkRoom) {
-      this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
-      this.games.setCreator(room, name);
-
-      this.receivedRoom(client, room);
-    } else {
-      this.wss.to(client.id).emit("message", { message: "Room Already Created, Please Click Join Room", type: MessageType.Error });
+    try {
+      const checkRoom = this.games.checkRoom(room);
+      if (!checkRoom) {
+        this.games.checkSize(room, client.id, name, PlayerType.PlayerOne);
+        this.games.setCreator(room, name);
+        console.log("creator", this.games.getRooms());
+        this.receivedRoom(client, room);
+      } else {
+        this.wss.to(client.id).emit("message", { message: "Room Already Created, Please Click Join Room", type: MessageType.Error });
+      }
+    } catch(err) {
+      console.log(err)
     }
+    
   }
 
   async receivedRoom(client, room: string) {
     await client.join(room);
-
+    console.log("join", this.games.getRooms());
     client.room = room;
     const gameClients = this.games.getClients(room);
+    console.log("joined", this.games.getRooms());
     const gamePlace = this.games.getGames(room);
     const creator = this.games.getRoomCreator(room);
     const turn = (this.games.playersMustBeTwo(room)) ? this.games.whosTurn(room) : null;
@@ -139,6 +144,8 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     if (!checkRoom) {
       this.roomDoesNotExist(client);
     } else {
+      console.log(this.games.getRooms());
+
       const playerType = (this.games.getRoomCreator(room) == name) ? PlayerType.PlayerOne : PlayerType.PlayerTwo,
         bool = this.games.checkSize(room, client.id, name, playerType);
 

@@ -152,16 +152,16 @@ export class Players {
 
   checkSize(room: string, playerId: string, playerName = "", playerType): Boolean {
     const game = room in this.games ? this.games[room] : {},
-      size = Object.keys(game.players || {}).length;
+      size = Object.keys(game.players || {}).length,
+      checkCreator = !(Object.keys(game).includes("creator"));
 
     if (size < 2) {
-      if (size == 0) {
+      if (size == 0 && checkCreator) {
         this.games[room] = {
           tic_tac_toe: {},
           players: {},
-          creator: "",
-          winner: "",
           score: 0,
+          creator: "",
           turn: playerType
         };
         
@@ -201,6 +201,10 @@ export class Players {
 
   getRoomCreator(room): string {
     return this.checkRoom(room) ? this.games[room].creator : "";
+  }
+
+  getRooms() {
+    return this.games;
   }
 
   getGames(room): Object {
