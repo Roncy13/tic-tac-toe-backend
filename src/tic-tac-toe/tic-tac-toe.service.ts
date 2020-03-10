@@ -14,30 +14,7 @@ export class TicTacToeService {
     private gateWay: TicTacToeGateway
   ) {}
 
-  async create(body: PlayerOneDTO): Promise<TicTacToe> {
-    body.connection = uniqid();
-
-    const { playerOne, connection } = body;
-    const newGame = {
-      players: {
-        playerOne
-      },
-      connection,
-      winner: null
-    }, result = new this.model(newGame);
-
-    return result.save();
-  }
-
-  async findExisting(connection: string): Promise<TicTacToe> {
-    return this.model.findOne({ connection }).exec();
-  }
-
-  async joinPlayerTwo({ playerTwo, connection }: PlayerTwoDTO): Promise<TicTacToe> {
-    return this.model.findOneAndUpdate({ connection }, {"$set": { "players.playerTwo": playerTwo } }).exec();
-  }
-
-  async move() {
-    this.gateWay.wss.emit("move", "hey");
+  async fetchAll() {
+    return this.model.find({ score: { $gt: 0 } });
   }
 }

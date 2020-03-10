@@ -65,7 +65,6 @@ export class TicTacToeGateway implements OnGatewayInit, OnGatewayConnection, OnG
     
     client.room = room;
     const gameClients = this.games.getClients(room);
-    console.log("joined", this.games.getRooms());
     const gamePlace = this.games.getGames(room);
     const creator = this.games.getRoomCreator(room);
     const turn = (this.games.playersMustBeTwo(room)) ? this.games.whosTurn(room) : null;
